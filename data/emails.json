@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:26:21.023331",
+    "status": "sent"
+  },
+  {
+    "id": 2,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:32:18.963458",
+    "status": "sent"
+  },
+  {
+    "id": 3,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:33:06.891194",
+    "status": "sent"
+  },
+  {
+    "id": 4,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:34:02.750242",
+    "status": "sent"
+  },
+  {
+    "id": 5,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:34:35.758310",
+    "status": "sent"
+  },
+  {
+    "id": 6,
+    "to": "john@example.com",
+    "subject": "Meeting Reminder",
+    "body": "Hi John, This is a reminder about our meeting tomorrow at 3 PM.",
+    "sent_at": "2025-03-29T02:36:57.147876",
+    "status": "sent"
+  }
+]
