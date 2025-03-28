@@ -15,20 +15,54 @@ class AssistantAgent:
         self.max_iterations = 4  # Increased to 4 to allow for more complex tasks
         self.verbose = verbose
         self.system_prompt = """You are an assistant that helps users perform tasks by calling functions.
-        
-Analyze the user query and decide which Python function(s) to call.
-FUNCTION_CALL: function_name|param1,param2
+
+Analyze the user query and decide which Python function(s) to call. You'll see results and can make multiple function calls in sequence.
 
 Available functions:
-1. check_calendar_availability(time_str): Checks if a time slot is available on the calendar.
-2. schedule_meeting(person, time_str, title=None): Schedules a meeting with a person at a specific time.
-3. send_email(recipient, subject, body=None): Sends an email to a recipient with the given subject and body.
+1. check_calendar_availability(time_str): Checks if a time slot is available on the calendar. Returns availability status and details.
+2. schedule_meeting(person, time_str, title=None): Schedules a meeting with a person at a specific time. Returns success status and meeting details.
+3. send_email(recipient, subject, body=None): Sends an email to a recipient with the given subject and body. Returns success status.
 
-DO NOT use functions that aren't in this list. When you need to call a function, format your response as FUNCTION_CALL: function_name|param1,param2,...
-After processing, you'll see the result and can call another function if needed or provide a final answer.
+IMPORTANT INSTRUCTIONS:
+- DO NOT use functions that aren't in this list.
+- When you need to call a function, format your response EXACTLY as: FUNCTION_CALL: function_name|param1,param2,...
+- After seeing function results, you can call another function if needed or provide a final answer.
+- Your final answer should be prefixed with: FINAL_ANSWER:
+- For calendar functions, time strings can include "today", "tomorrow", or times like "3 PM", "15:00"
+- When scheduling meetings, check availability first before attempting to schedule
+- Functions use a JSON database to store calendar and email data persistently
 
-When you're done with all function calls, respond with FINAL_ANSWER: followed by your response to the user.
+Task flow examples:
+1. Checking availability: check_calendar_availability → final answer
+2. Scheduling meeting: check_calendar_availability → schedule_meeting → send_email → final answer
+
+Now, analyze the user query and respond with the appropriate function call or final answer.
 """
+
+    def _extract_function_call(self, llm_response):
+        """Extract a function call from the LLM response."""
+        # Look for the exact function call format
+        func_call_match = re.search(r"FUNCTION_CALL:\s*(\w+)\|(.+?)(?=\n|$)", llm_response)
+        
+        if func_call_match:
+            function_name = func_call_match.group(1).strip()
+            params_str = func_call_match.group(2).strip()
+            return f"FUNCTION_CALL: {function_name}|{params_str}"
+        
+        # Try a more lenient approach to find function calls
+        for function_name in FUNCTION_MAP.keys():
+            # Look for patterns like "call check_calendar_availability with parameter X"
+            pattern = rf"(?:call|use|execute)?\s*{function_name}\s*(?:\(|\s+with\s+|:)?\s*([^)]+)(?:\)|\.|\n|$)"
+            func_match = re.search(pattern, llm_response, re.IGNORECASE)
+            
+            if func_match:
+                params_str = func_match.group(1).strip().replace("=", ",").replace(" and ", ",")
+                # Clean up the parameters
+                params_str = re.sub(r'[\'"]', '', params_str)  # Remove quotes
+                params_str = re.sub(r'\s*,\s*', ',', params_str)  # Clean up commas
+                return f"FUNCTION_CALL: {function_name}|{params_str}"
+        
+        return None
 
     def _execute_function_call(self, function_call):
         """Execute a function call string and return the result."""
@@ -153,10 +187,17 @@ When you're done with all function calls, respond with FINAL_ANSWER: followed by
                 "llm_response": llm_response
             })
             
-            # Check if it's a function call
+            # Check if it's a function call or try to extract one
+            function_call = None
             if "FUNCTION_CALL:" in llm_response:
-                # Extract and execute the function call
-                function_call = llm_response.strip()
+                # Use regex to extract the exact function call format
+                function_call = self._extract_function_call(llm_response)
+            else:
+                # Try to extract a function call from free text
+                function_call = self._extract_function_call(llm_response)
+            
+            if function_call:
+                # Execute the function call
                 result = self._execute_function_call(function_call)
                 last_result = result
                 
@@ -191,7 +232,7 @@ When you're done with all function calls, respond with FINAL_ANSWER: followed by
                     print("=" * 50)
                 break
             else:
-                # It's a regular response
+                # Treat it as a final answer if the LLM didn't generate a function call
                 conversation_history[-1]["final_answer"] = True
                 
                 if show_iterations:
@@ -237,10 +278,7 @@ When you're done with all function calls, respond with FINAL_ANSWER: followed by
         """
         Call the LLM with the given prompt.
         
-        This is a placeholder function. In a real application, this would call an 
-        actual LLM API like OpenAI, Google Gemini, etc.
-        
-        For testing, this function simulates responses for specific prompts.
+        This function calls the LLM client's generate_content method.
         """
         # The LLM client should have a generate_content method
         return llm_client.generate_content(prompt) 
