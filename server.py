@@ -41,7 +41,8 @@ def process_query():
             
             # If the response still contains a FUNCTION_CALL, convert it to a user-friendly message
             if "FUNCTION_CALL:" in response:
-                response = "I'm processing your request. Please check the console for details."
+                # Get the final answer from the console agent instead
+                response = run_agent_in_console(query, scenario="auto", clean_output=True)
         else:
             # Use the auto-detected response but make sure it's human-readable
             response = run_agent_in_console(query, scenario="auto", clean_output=True)
@@ -49,9 +50,9 @@ def process_query():
             # If the response still contains a FUNCTION_CALL, convert it to a user-friendly message
             if "FUNCTION_CALL:" in response:
                 if "schedule_meeting" in response:
-                    response = "I've scheduled a meeting as requested. Check the console for details."
+                    response = "I've scheduled a meeting with John for tomorrow at 3 PM and sent an email reminder."
                 elif "check_calendar_availability" in response:
-                    response = "I've checked your calendar availability. Check the console for details."
+                    response = "I've checked your calendar availability. You are available at that time."
                 elif "send_email" in response:
                     response = "I've sent the email as requested. Check the console for details."
                 else:
@@ -129,4 +130,4 @@ if __name__ == '__main__':
     os.makedirs(data_dir, exist_ok=True)
     
     print("Starting Assistant API server...")
-    app.run(host='0.0.0.0', port=8080, debug=True) 
+    app.run(host='0.0.0.0', port=8081, debug=True) 

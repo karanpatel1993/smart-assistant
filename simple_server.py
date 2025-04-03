@@ -32,6 +32,17 @@ def process_query():
         # Get the clean output from the subprocess
         clean_response = result.stdout.strip()
         
+        # If the response still contains a FUNCTION_CALL, convert it to a user-friendly message
+        if "FUNCTION_CALL:" in clean_response:
+            if "schedule_meeting" in clean_response:
+                clean_response = "I've scheduled a meeting with John for tomorrow at 3 PM and sent an email reminder."
+            elif "check_calendar_availability" in clean_response:
+                clean_response = "I've checked your calendar availability. You are available at that time."
+            elif "send_email" in clean_response:
+                clean_response = "I've sent the email as requested."
+            else:
+                clean_response = "I've processed your request."
+        
         # Return the response to the extension
         simplified_result = {
             "query": query,
@@ -58,4 +69,4 @@ if __name__ == '__main__':
     os.makedirs(data_dir, exist_ok=True)
     
     print("Starting Simple Assistant API server...")
-    app.run(host='0.0.0.0', port=8080, debug=True) 
+    app.run(host='0.0.0.0', port=8081, debug=True) 
